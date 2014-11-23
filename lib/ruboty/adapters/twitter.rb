@@ -1,6 +1,9 @@
 require "active_support/core_ext/object/try"
 require "mem"
 require "twitter"
+require 'pp'
+
+MAX_MSG_LENGTH = 140
 
 module Ruboty
   module Adapters
@@ -18,7 +21,13 @@ module Ruboty
       end
 
       def say(message)
-        client.update(message[:body], in_reply_to_status_id: message[:original][:tweet].try(:id))
+        body = message[:body]
+        body = "@#{message[:to]} #{body}" if message[:to]
+
+        while body
+          client.update(body[0...MAX_MSG_LENGTH], in_reply_to_status_id: message[:original][:tweet].try(:id))
+          body = body[MAX_MSG_LENGTH...-1]
+        end
       end
 
       private
